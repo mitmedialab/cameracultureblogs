@@ -36,7 +36,7 @@ So... what is the (algebraic) structure of our function?
 
 For our example, we want to write generic programs that take objects (or if you will: types), and produce output with objects of the same type. In other words, we could write a python function:
 
-```
+```python
 def super_complicated_function(x):
 	return x * sin(x+6.)**2. / 2. - 2. / 2.**x
 ```
@@ -86,7 +86,7 @@ Look, we get the well known power rule using algebra! I love this because we don
 
 Translating this into code, we can overload python’s arithmetic operators as follows:
 
-```
+```python
 class Dual:
     def __init__(self, value=0., derivative=0.):
         self.value = value
@@ -109,7 +109,7 @@ class Dual:
 I’ve omitted the rather repetitive definition of inverse operators (like `__sub__`), since we can get those easily by composing the above operations. As an example, `__truediv__` which overloads `/` is shown as composing multiplication and power. 
 For each operator, we can also automatically “cast” floating point constants into duals. Here is an example of the definition for `__add__`:
 
-```
+```python
 def __add__(self, other):
          if isinstance(other, self.__class__):
             return Dual(self.value + other.value, self.derivative + other.derivative)
@@ -119,7 +119,7 @@ def __add__(self, other):
 
 We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()` in python:
 
-```
+```python
 import math
 
 def sin(dual):
@@ -133,7 +133,7 @@ Now, we can perform Forward Mode AD practically right away, using the `Dual` num
 
 Now, when we run our function, in order to calculate `x’` for the input to our function, we pass in a `Dual`, with a constructor that sets the `.derivative` data member to 1, in order to correctly calculate `f` and `df/dx` when we call the function. Using our dual numbers class, we can input some values into `super_complicated_function` and we get some answers!
 
-```
+```python
 def super_complicated_function(x):
     return x * sin(x+6.)**2. / 2. - 2. / 2.**x
 
@@ -175,7 +175,7 @@ Let’s now draw a graph visualizing our function. Here, the operations that mak
 
 We can define a function that automatically generates the red “local derivatives” for each operation. We run the function in a loop, setting all `.derivative` members to 0, except for the particular input we are interested in:
 
-```    
+```python
 def create_diff_fn(fn):
         def diff_fn(*argv):
             jacobian = []
@@ -201,7 +201,7 @@ The basic idea is we encapsulate each primitive operation using forward and back
 
 Before we share the code for `Variable` that implements this idea, here is an example of how it might be used:
 
-```
+```python
 # compose a graph of nodes
 
 x = Variable(10.01)
@@ -226,7 +226,7 @@ print('x: {} \ny: {}'.format(x.gradient, y.gradient))
 
 Here is all the code you need (excluding most of the overloaded arithmetic operators to stay concise):
 
-```
+```python
 class Variable:
     def __init__(self, operation, input_variables=[]):
         # note the setter for @property value below
@@ -237,7 +237,7 @@ class Variable:
 
 Our `Variable` class represents an operation (or function), it’s inputs as variables, and a @property representing our logic to calculate the output of the operation. We also make a place to store the value of the gradient.
 
-```     
+```python     
     def calc_input_values(self):
         # calculate the real-valued input to operation
         return [v.value for v in self.input_variables]
@@ -264,8 +264,7 @@ The above code uses a @property to make the interface a bit nicer, but actually 
 
 This completes our bookkeeping for running the operation forward. Below, we include all of the backward, or backprop logic:
 
-```
-        
+```python
     def backward(self, output_gradient=1.):
         # combine gradients from other paths and propagate to children
         self.gradient += output_gradient
@@ -276,7 +275,7 @@ This completes our bookkeeping for running the operation forward. Below, we incl
 
 And this is an example of defining an operation. We could pass in any function handle as an `operation`, but when overloading basic math functions, we create a lambda.
     
-```
+```python
     def __add__(self, other):
         if isinstance(other, self.__class__):
             return Variable(lambda a,b : a+b, (self, other))
@@ -289,7 +288,7 @@ Clearly, this code is not super efficient. For one, it would be straightforward 
 
 As we can see, our `super_complicated_function` returns what we expect:
 
-```
+```python
 for x in [-1., 0.5, 3.]:
     print('Function Input: {}'.format(x))
     print('Function Value: {}'.format(super_complicated_function(x)))
@@ -336,7 +335,7 @@ It’s known that finding the optimal trade-off between using forward mode and b
 
 Since we build a computation graph dynamically, our `Variable` class can handle branching and loops.
 
-```
+```python
 def forward_fn(x):
     for n in range(5):
         if n % 2 == 0:
@@ -358,7 +357,7 @@ We’ve only implemented a simple library that handles composing scalar function
 
 And as a final proof of concept, let’s solve a minimization problem:
 
-```
+```python
 def fn(x):
     return x**2 + 0.2*(x-2)**4 + 2*x**3
 
