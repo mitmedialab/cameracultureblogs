@@ -3,7 +3,7 @@ Tristan Swedish
 Camera Culture
 MIT Media Lab
 
-There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/autodiffsimple).
+There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
 
 ## Differentiating Computer Programs
 
@@ -358,48 +358,57 @@ print(x)
 
 We’ve only implemented a simple library that handles composing scalar functions and real numbers, but real AD systems can build something very similar using vectors and matrices and the rules of linear algebra.
 
-And as a final proof of concept, let’s solve a minimization problem:
+And as a final proof of concept, let’s solve a simple inverse problem. I've defined a monotonic polynomial, and set a target of `42`. With an initial guess for the function of `3`, we minimize the square error between the output from our initial guess and target of `42` using our AD library and gradient descent:
 
 ```python
 def fn(x):
-    return x**2 + 0.2*(x-2)**4 + 2*x**3
+    return x**2 + 0.2*(x-2)**5 + 2*x**3
 
 # initialization
-x = Variable(2.)
+x = Variable(3.)
+target = 42.
 print('---- Initial Value ----')
-print('fn(x): {}'.format(L))
-print('x: {}'.format(x))
+print('fn(x): {}'.format(fn(x)))
+print('Target: {}'.format(target))
+print('intial guess for x: {}'.format(x))
 
-for n in range(30):
-    L = fn(x)
+
+for n in range(20):
+    L = (fn(x) - target)**2
     L.backward()
     # gradient descent update
-    x.value = x.value - 0.1 * x.gradient
+    x.value = x.value - 1e-4 * x.gradient
     # clear the gradients
     x.clear_gradient()
     
 print('---- Converged Value ----')    
-print('fn(x): {}'.format(L))
-print('x: {}'.format(x))
+print('fn(x): {}'.format(fn(x)))
+print('Target: {}'.format(target))
+print('converged x: {}'.format(x))
 
+
+'''
 # Wolfram alpha minimum: 
-# min{x^2 + 0.2 (x - 2)^4 + 2 x^3}≈1.5110 at x≈0.51489
+# min{(x^2 + 0.2 (x - 2)^5 + 2 x^3 - 42)^2} = 0 at x≈2.60158
 # Output:
 '''
 ---- Initial Value ----
-fn(x): < Variable value: 1.5110101392696607, gradient: 1.0 >
-x: < Variable value: 2.0, gradient: 0.0 >
+fn(x): < Variable value: 63.2, gradient: 0.0 >
+Target: 42.0
+intial guess for x: < Variable value: 3.0, gradient: 0.0 >
 ---- Converged Value ----
-fn(x): < Variable value: 1.5110101392696607, gradient: 1.0 >
-x: < Variable value: 0.5149364184363174, gradient: 0.0 >
+fn(x): < Variable value: 42.00014691908245, gradient: 0.0 >
+Target: 42.0
+converged x: < Variable value: 2.601581019114941, gradient: 0.0 >
 '''
 ```
+
+Cracked it!
 
 This post hopefully provides you with a good intuition for using AD in real problems. By carefully constructing types and overloading the right operators, we end up with a rather elegant way to differentiate computer programs. The general principle of abstraction via function overload can be applied to other “morphisms”, such as those used in Homomorphic Encryption, making AD actually a neat way to gain intuition about these other feats of modern computer science. Furthermore, while I love python, it’s generic programming capabilities aren’t the most flexible, and a better language for real applications is probably writing a C++ Template library like what’s used by [Enoki](https://enoki.readthedocs.io/en/master/demo.html). A notable python library for AD that I’ve had success with is JAX. Other well known frameworks that use auto-differentiation include Tensorflow and PyTorch, where for efficiency the AD code is implemented at a low level.
 
 Anyway, I hope AD is now not so mysterious to you, but is perhaps even more magical. :)
 
-
-The code can be found on github.
+The code for the embedded examples and the full class definitions (with more of the operators overloaded and some pretty-print functions) can be found on [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
 
 
