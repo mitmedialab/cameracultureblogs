@@ -1,10 +1,10 @@
-#The surprising simplicity of automatic differentiation 
+# The surprising simplicity of automatic differentiation 
 Tristan Swedish
 Camera Culture
 MIT Media Lab
 
 There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about Automatic Differentiation (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github LINK].
-##Differentiating Computer Programs
+## Differentiating Computer Programs
 
 Being able to calculate the derivative of functions defined in computer programs has broad applications. In essence, it allows you to understand how perturbations to the program input change the output. The naive way to do this is to use sampling based methods like finite differences, running the program many times with slightly adjusted inputs to see how the output changes. For a function with N variables or arguments, these methods typically require we call the function N+1 times. This is computationally unattractive, and even worse, we need to know how much to perturb the arguments to the function, leading to numerical problems.
 
@@ -25,7 +25,7 @@ Step 2 (what this post is all about). Translate the program so that we can diffe
 Step 3. Solve the inverse problem using gradient descent
 
 This post focuses on Step 2, demonstrating the simplicity of AD under the hood, performing a beautiful, almost magical transformation of the function so that we can obtain the derivatives by running this transformed version of our original function defined in our program.
-##It’s all about Abstraction
+## It’s all about Abstraction
 
 A common thread in physics and engineering, is the generalization of things we can calculate with more abstract mathematical objects to better explain real physical stuff. In other words, math gives us the vocabulary to define and solve problems. This is explained really well in Richard Feynman’s famous lectures on physics, maybe my favorite lecture ever: Feynman Lecture on Algebra. It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians...).
 
@@ -72,12 +72,12 @@ In this interpretation, we have a function of $\epsilon$, where the output of ou
 There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with $a + \epsilon b$ to get $1$? If we do the reasonable thing, we find $1/a + \epsilon -\frac{b}{a^2}$, which is not well defined for all $(a,b)$, since we have a division by zero when $(0,b)$. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
 
 (In abstract algebra terms, the dual numbers with `+` and `*` are a ring, while the reals have a multiplicative inverse, making them a field along with `+` and `*`. This matches our intuition, since dual numbers kinda seem like a polynomial ring, but we lop off any higher-order terms after performing a multiplication. We can keep these higher order terms if we want, and this becomes a Taylor polynomial algebra, but our memory requirements grow significantly for repeated multiplications.)
-###What about division?
+### What about division?
 
 In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of $0 + \epsilon b$ for a well formed function that works on the reals.
 
 We can use the derivation above to define `/` as multiplying by $1/a + \epsilon -\frac{b}{a^2}$. Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
-###Building Operations
+### Building More Operations
 
 A general definition for `pow(x,y)` can be found using the binomial theorem, noting that any high order terms go to zero since $\epsilon^2 == 0$:
 
@@ -130,8 +130,8 @@ def sin(dual):
 ```
 
 Why do we need to import `math`? It would be nice if we could automatically derive the all our math operators from definitions of `+` and `*` using some given algebraic structure, but these are the kinds of things you begin to wish programming languages did when you play with this stuff. (“Hey, this seems like something Haskell should be able to do!” --bystander walking away muttering about Monads...)
-##Types of Automatic Differentiation
-###Forward Mode AD
+## Types of Automatic Differentiation
+### Forward Mode AD
 Now, we can perform Forward Mode AD practically right away, using the `Dual` numbers class we’ve already defined.
 
 Now, when we run our function, in order to calculate `x’` for the input to our function, we pass in a `Dual`, with a constructor that sets the `.derivative` data member to 1, in order to correctly calculate `f` and `df/dx` when we call the function. Using our dual numbers class, we can input some values into `super_complicated_function` and we get some answers!
@@ -195,7 +195,7 @@ def create_diff_fn(fn):
 ```
 
 The function above returns a function that calculates the partial derivative with respect to each input to our function. We note that this requires we run the function multiple times, making our computational complexity pretty poor for functions with many inputs. To solve this problem, we can trade memory for time complexity, by caching intermediate results for single forward pass and exploiting the associativity of multiplication found in the chain rule. This is called “Reverse Mode AD,” and is the mode used for things with many input parameters like Deep Neural Networks.
-###Reverse Mode AD
+### Reverse Mode AD
 
 
 Noting the diagram above we note that our derivatives are updated at each operation node. If we step back and examine the chain rule, noting that derivatives multiply, perhaps we can propagate the gradients along the graph in the other direction? This leads to an algorithm called “backpropagation.” If you’ve trained neural networks before, you probably love backprop. We all love backprop. Backprop loves backprop [https://arxiv.org/pdf/1606.04474.pdf].
@@ -327,14 +327,15 @@ Input value: < Variable value: 3.0, gradient: -0.8682732520785479 >
 --------------------------------
 '''
 ```
-###Hybrid Mode AD
+### Hybrid Mode AD
 
 In our construction so far, if we define a function that processes `Dual` types, we are using Forward Mode AD, and functions that process `Variable` types are using Reverse Mode AD. Our library defines a function, `create_diff_fn`,  that translates between these two kinds of functions. We use this function to “wrap” Forward Mode functions written for `Dual`s so that they can process `Variables`, and incorporate them into the Reverse Mode call graph. In this way, we can run Reverse Mode AD on any function that uses operations defined for `Dual`.
 
 By wrapping pieces of our computational graph as standalone functions where we always compute the backward values using Forward Mode, we can trade memory for time complexity. This trade-off is called “Hybrid Mode” AD, and can be very important for performance, especially when encountering large memory requirements for certain functions when using Reverse Mode AD.
 
 It’s known that finding the optimal trade-off between using forward mode and backward mode AD to balance time and memory complexity is NP-hard. This means that we probably won’t find the most efficient way to compute the derivatives for arbitrary programs. Luckily, there are some good heuristics that actually do a pretty good job. Anyway, our library is definitely not very efficient, and more production grade AD libraries often use smart caching of intermediate results and perform various optimizations using JIT compilation. Regardless, our simple little library can do some really neat things. It gracefully handles control flow, and can differentiate pretty complex programs already.
-##Conclusion: Simple Python Library
+
+## Conclusion: Simple Python Library
 
 Since we build a computation graph dynamically, our `Variable` class can handle branching and loops.
 
