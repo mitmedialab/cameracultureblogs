@@ -94,13 +94,16 @@ class Dual:
         self.derivative = derivative
         
     def __add__(self, other):
-            return Dual(self.value + other.value, self.derivative + other.derivative)
+        return Dual(self.value + other.value, self.derivative + other.derivative)
     
     def __mul__(self, other):
-            return Dual(self.value * other.value, self.value*other.derivative + self.derivative * other.value)
+        return Dual(self.value * other.value, self.value*other.derivative + self.derivative * other.value)
 
-     def __pow__(self, other):
-             return Dual(self.value**other.value, self.derivative * other.value * self.value**(other.value-1))
+    def __pow__(self, other):
+        if self.value > 0.:
+            return Dual(self.value**other.value, self.derivative * other.value * self.value**(other.value-1) + other.derivative * self.value**other.value * math.log(self.value))
+        else:
+            return Dual(self.value**other.value, self.derivative * other.value * self.value**(other.value-1))
             
     def __truediv__(self, other):
         return self * other**(-1.)
@@ -224,6 +227,10 @@ L.backward()
 
 # gradients of the inputs are updated
 print('x: {} \ny: {}'.format(x.gradient, y.gradient))
+
+# clear gradients if we don't want to accumulate on next backward()
+# will follow tree down to clear gradient of x,y as well
+L.clear_gradient()
 
 ```
 
