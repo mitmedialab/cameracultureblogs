@@ -48,8 +48,7 @@ Example: Complex Numbers
 
 A familiar example of a type we can define that our function will also accept are complex numbers. Without even running the program we can be confident our calculations will be algebraically correct. We know this because complex numbers form a field with `*` and `+`, thus the underlying algebraic structure is the same as for the reals. We can write complex numbers like this:
 
-![&#10;a + i
-b&#10;](https://latex.codecogs.com/png.latex?%0Aa%20%2B%20i%20b%0A
+![](http://latex.codecogs.com/png.download?a%20+%20i%20b
 "
 a + i b
 ") 
