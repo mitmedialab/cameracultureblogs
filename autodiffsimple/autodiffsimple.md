@@ -48,9 +48,9 @@ Example: Complex Numbers
 
 A familiar example of a type we can define that our function will also accept are complex numbers. Without even running the program we can be confident our calculations will be algebraically correct. We know this because complex numbers form a field with `*` and `+`, thus the underlying algebraic structure is the same as for the reals. We can write complex numbers like this:
 
-<img src="https://render.githubusercontent.com/render/math?math=a + i b"> 
+<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b"> 
 
-Where <img src="https://render.githubusercontent.com/render/math?math=i^2 = -1"> . If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
+Where <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3D%20-1"> . If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 ##Dual Numbers
 
 There is a kind of number very similar to complex numbers that give us the properties we need to perform AD. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative. 
