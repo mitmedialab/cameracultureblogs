@@ -128,6 +128,7 @@ def sin(dual):
 ```
 
 Why do we need to import `math`? It would be nice if we could automatically derive the all our math operators from definitions of `+` and `*` using some given algebraic structure, but these are the kinds of things you begin to wish programming languages did when you play with this stuff. (“Hey, this seems like something Haskell should be able to do!” --bystander walking away muttering about Monads...)
+
 ## Types of Automatic Differentiation
 ### Forward Mode AD
 Now, we can perform Forward Mode AD practically right away, using the `Dual` numbers class we’ve already defined.
@@ -172,7 +173,7 @@ Function Symbolic Derivative: -0.8682732520785479
 
 Let’s now draw a graph visualizing our function. Here, the operations that make up our function are shown as nodes, and their arguments are shown in order (top to bottom). We show red numbers to represent intermediate derivatives. For example, for the division operation in the top right, we compute <img src="https://render.githubusercontent.com/render/math?math=%280.51%20%2B%20%5Cepsilon%201%29%20%2F%202%20%3D%200.5"> for the top input and <img src="https://render.githubusercontent.com/render/math?math=0.51%20%2F%20%282%20%2B%20%5Cepsilon%201%29%20%3D%20-0.13"> for the bottom input (the constant value “2”). In order to calculate the derivative with respect to the output, we start at a node and multiply all the red numbers following the path through the tree to the output. If we have a variable like `x` with multiple paths, we sum the product for each path.
 
-
+![](imgs/autodiff_graph.png)
 
 We can define a function that automatically generates the red “local derivatives” for each operation. We run the function in a loop, setting all `.derivative` members to 0, except for the particular input we are interested in:
 
