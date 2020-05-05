@@ -48,7 +48,11 @@ Example: Complex Numbers
 
 A familiar example of a type we can define that our function will also accept are complex numbers. Without even running the program we can be confident our calculations will be algebraically correct. We know this because complex numbers form a field with `*` and `+`, thus the underlying algebraic structure is the same as for the reals. We can write complex numbers like this:
 
-![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20i%20b&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
+![&#10;a + i
+b&#10;](https://latex.codecogs.com/png.latex?%0Aa%20%2B%20i%20b%0A
+"
+a + i b
+") 
 
 Where ![](http://www.sciweavers.org/tex2img.php?eq=i%5E2%20%3D%20-1&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 ##Dual Numbers
