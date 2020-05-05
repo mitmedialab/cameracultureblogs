@@ -3,7 +3,8 @@ Tristan Swedish
 Camera Culture
 MIT Media Lab
 
-There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about Automatic Differentiation (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github LINK].
+There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/autodiffsimple).
+
 ## Differentiating Computer Programs
 
 Being able to calculate the derivative of functions defined in computer programs has broad applications. In essence, it allows you to understand how perturbations to the program input change the output. The naive way to do this is to use sampling based methods like finite differences, running the program many times with slightly adjusted inputs to see how the output changes. For a function with N variables or arguments, these methods typically require we call the function N+1 times. This is computationally unattractive, and even worse, we need to know how much to perturb the arguments to the function, leading to numerical problems.
@@ -29,8 +30,9 @@ This post focuses on Step 2, demonstrating the simplicity of AD under the hood, 
 
 A common thread in physics and engineering, is the generalization of things we can calculate with more abstract mathematical objects to better explain real physical stuff. In other words, math gives us the vocabulary to define and solve problems. This is explained really well in Richard Feynman’s famous lectures on physics, maybe my favorite lecture ever: Feynman Lecture on Algebra. It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians...).
 
-Computer Science also loves abstraction and composition, as it allows us to reason about how objects in computer programs can be combined to generate new objects. A relevant branch of mathematics is “Abstract Algebra” and I’m going to use it as inspiration for explaining AD. We’re not going to be very rigorous, but it’s incredibly useful to use Abstract Algebra as a kind of roadmap for what we’re trying to do. You can read more here [https://jrsinclair.com/articles/2019/algebraic-structures-what-i-wish-someone-had-explained-about-functional-programming/ , https://www.fm2gp.com/].
-What is the (algebraic) structure of our function?
+Computer Science also loves abstraction and composition, as it allows us to reason about how objects in computer programs can be combined to generate new objects. A relevant branch of mathematics is “Abstract Algebra” and I’m going to use it as inspiration for explaining AD. We’re not going to be very rigorous, but it’s incredibly useful to use Abstract Algebra as a kind of roadmap for what we’re trying to do. You can read more here: [a blog post](https://jrsinclair.com/articles/2019/algebraic-structures-what-i-wish-someone-had-explained-about-functional-programming/), [a book](https://www.fm2gp.com/).
+
+So... what is the (algebraic) structure of our function?
 
 For our example, we want to write generic programs that take objects (or if you will: types), and produce output with objects of the same type. In other words, we could write a python function:
 
@@ -46,7 +48,7 @@ Example: Complex Numbers
 
 A familiar example of a type we can define that our function will also accept are complex numbers. Without even running the program we can be confident our calculations will be algebraically correct. We know this because complex numbers form a field with `*` and `+`, thus the underlying algebraic structure is the same as for the reals. We can write complex numbers like this:
 
-![complexnumbers](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20ib&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
+![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20ib&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
 
 Where ![](http://www.sciweavers.org/tex2img.php?eq=i%5E2%20%3D%20-1&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 ##Dual Numbers
@@ -54,34 +56,31 @@ Where ![](http://www.sciweavers.org/tex2img.php?eq=i%5E2%20%3D%20-1&bc=White&fc=
 There is a kind of number very similar to complex numbers that give us the properties we need to perform AD. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative. 
 
 Dual-numbers can be defined in similar way to complex numbers:
- 
-$$
-a + \epsilon b
-$$
 
-Where $\epsilon^2 = 0$. Note that $\epsilon^k = 0$ when k > 2 as well, which we get by factoring out  $\epsilon^2$. Now, we can replace all our normal numbers with these new magical numbers. 
+![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20%5Cepsilon%20b&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
+
+Where ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2%20%3D%200&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Note that ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5Ek%20%3D%200&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) when k > 2 as well, which we get by factoring out  ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Now, we can replace all our normal numbers with these new magical numbers. 
 
 Here’s the intuition: when computing with dual numbers, you’re computing a first order approximation of the function for a specific argument. When performing multiplication, higher order terms that preserve the approximation everywhere are discarded. It’s this first order approximation that gives it utility for computing the derivative. Let’s imagine we have two first-order polynomials, and we want to calculate the output for all values to the resulting function after applying addition and multiplication. We could write this out as follows:
 
 
 
-In this interpretation, we have a function of $\epsilon$, where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of $\epsilon$, we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal $\epsilon$ perturbations to our function, we can throw away these high order terms.
+In this interpretation, we have a function of ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) perturbations to our function, we can throw away these high order terms.
 
-There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with $a + \epsilon b$ to get $1$? If we do the reasonable thing, we find $1/a + \epsilon -\frac{b}{a^2}$, which is not well defined for all $(a,b)$, since we have a division by zero when $(0,b)$. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
+There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with ![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20ib&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) to get 1? If we do the reasonable thing, we find ![](http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20%20-%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
 
 (In abstract algebra terms, the dual numbers with `+` and `*` are a ring, while the reals have a multiplicative inverse, making them a field along with `+` and `*`. This matches our intuition, since dual numbers kinda seem like a polynomial ring, but we lop off any higher-order terms after performing a multiplication. We can keep these higher order terms if we want, and this becomes a Taylor polynomial algebra, but our memory requirements grow significantly for repeated multiplications.)
 ### What about division?
 
-In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of $0 + \epsilon b$ for a well formed function that works on the reals.
+In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of ![](http://www.sciweavers.org/tex2img.php?eq=0%20%2B%20%5Cepsilon%20b&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for a well formed function that works on the reals.
 
-We can use the derivation above to define `/` as multiplying by $1/a + \epsilon -\frac{b}{a^2}$. Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
+We can use the derivation above to define `/` as multiplying by ![](http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20%20-%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
+
 ### Building More Operations
 
-A general definition for `pow(x,y)` can be found using the binomial theorem, noting that any high order terms go to zero since $\epsilon^2 == 0$:
+A general definition for `pow(x,y)` can be found using the binomial theorem, noting that any high order terms go to zero since ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0):
 
-$$
-(a + \epsilon b)^n = a^n + \epsilon b a^(n-1)
-$$
+![](http://www.sciweavers.org/tex2img.php?eq=%28a%20%2B%20%5Cepsilon%20b%29%5En%20%3D%20a%5En%20%2B%20%5Cepsilon%20b%20a%5E%7Bn-1%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
 
 Look, we get the well known power rule using algebra! I love this because we don’t even need to use the traditional definition of the derivative that uses limits.
 
@@ -118,7 +117,7 @@ def __add__(self, other):
             return self + Dual(other)
 ```
 
-We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that $f(x, x’) \rightarrow (y, x’ y’)$, we can compose these operators and everything works as expected. Here is `sin()` in python:
+We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()` in python:
 
 ```
 import math
@@ -170,7 +169,7 @@ Function Symbolic Derivative: -0.8682732520785479
 '''
 ```
 
-Let’s now draw a graph visualizing our function. Here, the operations that make up our function are shown as nodes, and their arguments are shown in order (top to bottom). We show red numbers to represent intermediate derivatives. For example, for the division operation in the top right, we compute $(0.51 + \epsilon 1) / 2 = 0.5$ for the top input and  $0.51 / (2 + \epsilon 1) = -0.13$ for the bottom input (the constant value “2”). In order to calculate the derivative with respect to the output, we start at a node and multiply all the red numbers following the path through the tree to the output. If we have a variable like `x` with multiple paths, we sum the product for each path.
+Let’s now draw a graph visualizing our function. Here, the operations that make up our function are shown as nodes, and their arguments are shown in order (top to bottom). We show red numbers to represent intermediate derivatives. For example, for the division operation in the top right, we compute ![](http://www.sciweavers.org/tex2img.php?eq=%280.51%20%2B%20%5Cepsilon%201%29%20%2F%202%20%3D%200.5&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for the top input and  ![](http://www.sciweavers.org/tex2img.php?eq=0.51%20%2F%20%282%20%2B%20%5Cepsilon%201%29%20%3D%20-0.13&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for the bottom input (the constant value “2”). In order to calculate the derivative with respect to the output, we start at a node and multiply all the red numbers following the path through the tree to the output. If we have a variable like `x` with multiple paths, we sum the product for each path.
 
 
 
@@ -394,7 +393,7 @@ x: < Variable value: 0.5149364184363174, gradient: 0.0 >
 '''
 ```
 
-This post hopefully provides you with a good intuition for using AD in real problems. By carefully constructing types and overloading the right operators, we end up with a rather elegant way to differentiate computer programs. The general principle of abstraction via function overload can be applied to other “morphisms”, such as those used in Homomorphic Encryption, making AD actually a neat way to gain intuition about these other feats of modern computer science. Furthermore, while I love python, it’s generic programming capabilities aren’t the most flexible, and a better language for real applications is probably writing a C++ Template library like what’s used by [https://enoki.readthedocs.io/en/master/demo.html]. A notable python library for AD that I’ve had success with is JAX. Other well known frameworks that use auto-differentiation include Tensorflow and PyTorch, where for efficiency the AD code is implemented at a low level.
+This post hopefully provides you with a good intuition for using AD in real problems. By carefully constructing types and overloading the right operators, we end up with a rather elegant way to differentiate computer programs. The general principle of abstraction via function overload can be applied to other “morphisms”, such as those used in Homomorphic Encryption, making AD actually a neat way to gain intuition about these other feats of modern computer science. Furthermore, while I love python, it’s generic programming capabilities aren’t the most flexible, and a better language for real applications is probably writing a C++ Template library like what’s used by [Enoki](https://enoki.readthedocs.io/en/master/demo.html). A notable python library for AD that I’ve had success with is JAX. Other well known frameworks that use auto-differentiation include Tensorflow and PyTorch, where for efficiency the AD code is implemented at a low level.
 
 Anyway, I hope AD is now not so mysterious to you, but is perhaps even more magical. :)
 
