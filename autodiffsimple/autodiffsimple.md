@@ -50,6 +50,8 @@ $$
 a + i b
 $$
 
+![complexnumbers](https://microsoft.codecogs.com/svg.latex?a%20+%20i%20b)
+
 Where $i^2 = -1$. If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 ##Dual Numbers
 
