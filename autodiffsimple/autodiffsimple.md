@@ -57,30 +57,31 @@ There is a kind of number very similar to complex numbers that give us the prope
 
 Dual-numbers can be defined in similar way to complex numbers:
 
-![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20%5Cepsilon%20b&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
+<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">
 
-Where ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2%20%3D%200&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Note that ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5Ek%20%3D%200&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) when k > 2 as well, which we get by factoring out  ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Now, we can replace all our normal numbers with these new magical numbers. 
+Where <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200">. Note that <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200"> when k > 2 as well, which we get by factoring out <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2">. Now, we can replace all our normal numbers with these new magical numbers. 
 
 Here’s the intuition: when computing with dual numbers, you’re computing a first order approximation of the function for a specific argument. When performing multiplication, higher order terms that preserve the approximation everywhere are discarded. It’s this first order approximation that gives it utility for computing the derivative. Let’s imagine we have two first-order polynomials, and we want to calculate the output for all values to the resulting function after applying addition and multiplication. We could write this out as follows:
 
+![](imgs/function_math.png)
 
+In this interpretation, we have a function of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon"> perturbations to our function, we can throw away these high order terms.
 
-In this interpretation, we have a function of ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) perturbations to our function, we can throw away these high order terms.
-
-There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with ![](http://www.sciweavers.org/tex2img.php?eq=a%20%2B%20ib&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) to get 1? If we do the reasonable thing, we find ![](http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20%20-%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0), which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
+There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">  to get 1? If we do the reasonable thing, we find <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">, which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
 
 (In abstract algebra terms, the dual numbers with `+` and `*` are a ring, while the reals have a multiplicative inverse, making them a field along with `+` and `*`. This matches our intuition, since dual numbers kinda seem like a polynomial ring, but we lop off any higher-order terms after performing a multiplication. We can keep these higher order terms if we want, and this becomes a Taylor polynomial algebra, but our memory requirements grow significantly for repeated multiplications.)
+
 ### What about division?
 
-In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of ![](http://www.sciweavers.org/tex2img.php?eq=0%20%2B%20%5Cepsilon%20b&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for a well formed function that works on the reals.
+In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of <img src="https://render.githubusercontent.com/render/math?math=0%20%2B%20%5Cepsilon%20b"> for a well formed function that works on the reals.
 
-We can use the derivation above to define `/` as multiplying by ![](http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20%20-%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0). Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
+We can use the derivation above to define `/` as multiplying by <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">. Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
 
 ### Building More Operations
 
-A general definition for `pow(x,y)` can be found using the binomial theorem, noting that any high order terms go to zero since ![](http://www.sciweavers.org/tex2img.php?eq=%5Cepsilon%5E2&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0):
+A general definition for `pow(x,y)` can be found using the binomial theorem, noting that any high order terms go to zero since <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200">:
 
-![](http://www.sciweavers.org/tex2img.php?eq=%28a%20%2B%20%5Cepsilon%20b%29%5En%20%3D%20a%5En%20%2B%20%5Cepsilon%20b%20a%5E%7Bn-1%7D&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0)
+<img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20%5Cepsilon%20b%29%5En%20%3D%20a%5En%20%2B%20%5Cepsilon%20b%20a%5E%7Bn-1%7D">
 
 Look, we get the well known power rule using algebra! I love this because we don’t even need to use the traditional definition of the derivative that uses limits.
 
@@ -169,7 +170,7 @@ Function Symbolic Derivative: -0.8682732520785479
 '''
 ```
 
-Let’s now draw a graph visualizing our function. Here, the operations that make up our function are shown as nodes, and their arguments are shown in order (top to bottom). We show red numbers to represent intermediate derivatives. For example, for the division operation in the top right, we compute ![](http://www.sciweavers.org/tex2img.php?eq=%280.51%20%2B%20%5Cepsilon%201%29%20%2F%202%20%3D%200.5&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for the top input and  ![](http://www.sciweavers.org/tex2img.php?eq=0.51%20%2F%20%282%20%2B%20%5Cepsilon%201%29%20%3D%20-0.13&bc=White&fc=Black&im=png&fs=12&ff=modern&edit=0) for the bottom input (the constant value “2”). In order to calculate the derivative with respect to the output, we start at a node and multiply all the red numbers following the path through the tree to the output. If we have a variable like `x` with multiple paths, we sum the product for each path.
+Let’s now draw a graph visualizing our function. Here, the operations that make up our function are shown as nodes, and their arguments are shown in order (top to bottom). We show red numbers to represent intermediate derivatives. For example, for the division operation in the top right, we compute <img src="https://render.githubusercontent.com/render/math?math=%280.51%20%2B%20%5Cepsilon%201%29%20%2F%202%20%3D%200.5"> for the top input and <img src="https://render.githubusercontent.com/render/math?math=0.51%20%2F%20%282%20%2B%20%5Cepsilon%201%29%20%3D%20-0.13"> for the bottom input (the constant value “2”). In order to calculate the derivative with respect to the output, we start at a node and multiply all the red numbers following the path through the tree to the output. If we have a variable like `x` with multiple paths, we sum the product for each path.
 
 
 
@@ -192,6 +193,7 @@ def create_diff_fn(fn):
 ```
 
 The function above returns a function that calculates the partial derivative with respect to each input to our function. We note that this requires we run the function multiple times, making our computational complexity pretty poor for functions with many inputs. To solve this problem, we can trade memory for time complexity, by caching intermediate results for single forward pass and exploiting the associativity of multiplication found in the chain rule. This is called “Reverse Mode AD,” and is the mode used for things with many input parameters like Deep Neural Networks.
+
 ### Reverse Mode AD
 
 
