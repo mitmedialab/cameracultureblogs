@@ -1,65 +1,58 @@
-# The surprising simplicity of automatic differentiation 
+# The surprising simplicity of automatic differentiation
 Tristan Swedish
 Camera Culture
 MIT Media Lab
 
 There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
 
-## Differentiating Computer Programs
+The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you, and be inspired to use more complex implementations with confidence.
 
-Being able to calculate the derivative of functions defined in computer programs has broad applications. In essence, it allows you to understand how perturbations to the program input change the output. The naive way to do this is to use sampling based methods like finite differences, running the program many times with slightly adjusted inputs to see how the output changes. For a function with N variables or arguments, these methods typically require we call the function N+1 times. This is computationally unattractive, and even worse, we need to know how much to perturb the arguments to the function, leading to numerical problems.
+## (TODO re-write this section) Why would I want to differentiate computer programs?
 
-However, AD seeks to calculate these derivatives without running the program many times (typically O(a) for a << N), and to compute the derivatives exactly for a given function input, making numerical stability much less of a problem.
+If you've heard of auto-diff it's probably because you've learned how to train deep neural networks. Until deep-learning frameworks like PyTorch and Theano popularized it, the field of AD has been plagued by an aura of esoteric incantations inherent in some domains of scientific computing. In that world, it's known as the "Adjoint State Method" or "Adjoint Code," with popular implementations in FORTRAN. These methods are super powerful, but they don't need to be inaccessible.
 
-As a motivating example, we will consider the problem of guessing the input to a function defined in python when we’re only given it’s output. This is a common class of problems encountered in robotics, signal processing, and computational imaging. 
+Scientific computing.
 
-Basically, this is an inverse problem: we’d like to figure out the input to a function that produces the outputs we observe. For example, given the output from a rendering engine, we might perform “Inverse Graphics”: we want to take an image and figure out what parameters in our graphics program produce the same image. As such, if we minimize the difference between the given output and the output of our function by choosing different input parameters, we get closer to the solution to the inverse problem.
+*If you can differentiate a simulation, you can do more than just predict the output, you can figure out what the inputs should be to match real measurements.*
 
-In general, we can approach this problem as follows:
+Being able to calculate the derivative of functions defined in computer programs has broad applications. In essence, it allows you to understand how perturbations to the program input change the output.
 
-Step 1. Obtain the source code for the function we’re interested in
+This post focuses the simplicity of AD under the hood, showing how it performs a beautiful, almost magical transformation that allows us to find the derivatives of a subset of interesting computer programs.
 
-
-Step 2 (what this post is all about). Translate the program so that we can differentiate the whole program output with respect to the inputs
-
-
-Step 3. Solve the inverse problem using gradient descent
-
-This post focuses on Step 2, demonstrating the simplicity of AD under the hood, performing a beautiful, almost magical transformation of the function so that we can obtain the derivatives by running this transformed version of our original function defined in our program.
 ## It’s all about Abstraction
 
-A common thread in physics and engineering, is the generalization of things we can calculate with more abstract mathematical objects to better explain real physical stuff. In other words, math gives us the vocabulary to define and solve problems. This is explained really well in Richard Feynman’s famous lectures on physics, maybe my favorite lecture ever: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians...).
+Auto-diff is all about abstraction. The power of useful abstractions are well explained in Richard Feynman’s famous lectures on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians). If you go down this road, you may hear about Abstract Algebra. You can read more here: [a blog post](https://jrsinclair.com/articles/2019/algebraic-structures-what-i-wish-someone-had-explained-about-functional-programming/), [a book](https://www.fm2gp.com/).
 
-Computer Science also loves abstraction and composition, as it allows us to reason about how objects in computer programs can be combined to generate new objects. A relevant branch of mathematics is “Abstract Algebra” and I’m going to use it as inspiration for explaining AD. We’re not going to be very rigorous, but it’s incredibly useful to use Abstract Algebra as a kind of roadmap for what we’re trying to do. You can read more here: [a blog post](https://jrsinclair.com/articles/2019/algebraic-structures-what-i-wish-someone-had-explained-about-functional-programming/), [a book](https://www.fm2gp.com/).
-
-So... what is the (algebraic) structure of our function?
-
-For our example, we want to write generic programs that take objects (or if you will: types), and produce output with objects of the same type. In other words, we could write a python function:
+For our example, we could write a python function:
 
 ```python
 def super_complicated_function(x):
 	return x * sin(x+6.)**2. / 2. - 2. / 2.**x
 ```
 
-If we pass in something to this function and can compute a sensible result, we are basically dealing with a structure that looks a lot like a “field” in abstract algebra. These types or objects do what we expect with operators like:  `+`,`-`,`*`,` /`. We can compose expressions, and the python interpreter handles everything to make this function do what we expect algebraically (like obeying operator precedence with `()`). We also note we can’t divide by zero, but we can divide by any other number and the output is not ambiguous. The basic thing that behaves like this are the Real numbers, so we naturally expect the above function to run using floating point types. 
+You'll notice that we compose our function using a few primitive functions: `sin`, `**` (or `pow`), `+`, `-`, `*`, `/`. We can compose expressions, and the python interpreter handles everything to make this function do what we expect algebraically (like obeying operator precedence with `()`). Importantly, operators like `+` are just functions that take two arguments but use a fancy syntax.
 
-If we pass a new object into our function that overloads these operators in a mathematically sensible way, the rules still apply and the function does not need to be modified. This is typically known as “generic” programming, and in those terms, we can run this function for any other type that also has the corresponding operators used by the function. Python performs duck-typing and automatic type casting, so the function above is actually pretty generic.
-Example: Complex Numbers
+We naturally expect the above function to operate on floating point input. If we pass a new type (`class`) into our function that overloads the necessary functions (`+`, `*`, etc) in a sensible way, the rules of algebra still apply and everything works out. In auto-diff, we create a class that returns a modified version of itself, from which we can compute the gradient using a simple procedure.
 
-A familiar example of a type we can define that our function will also accept are complex numbers. Without even running the program we can be confident our calculations will be algebraically correct. We know this because complex numbers form a field with `*` and `+`, thus the underlying algebraic structure is the same as for the reals. We can write complex numbers like this:
+To better understand this idea, let us put aside auto-diff and use an example of a type (`class`) that has this property. Instead of using a simple procedure to recover the gradient, we will instead extract the imaginary component of a complex number.
 
-<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b"> 
+## Example: Complex Numbers
+
+As long as we overload the correct operators, such as `*` and `+`, we can define a complex number class that has an algebraic structure that is practically the same as for floating point numbers. We can write complex numbers like this:
+
+<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
 
 Where <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3D%20-1"> . If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
-##Dual Numbers
 
-There is a kind of number very similar to complex numbers that give us the properties we need to perform AD. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative. 
+## Dual Numbers
+
+There is a kind of number very similar to complex numbers that give us the properties we need to perform AD. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative.
 
 Dual-numbers can be defined in similar way to complex numbers:
 
 <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">
 
-Where <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200">. Note that <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200"> when k > 2 as well, which we get by factoring out <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2">. Now, we can replace all our normal numbers with these new magical numbers. 
+Where <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon%5E2%20%3D%200">. Now, like with complex numbers, we can replace all our normal numbers with these new magical numbers.
 
 Here’s the intuition: when computing with dual numbers, you’re computing a first order approximation of the function for a specific argument. When performing multiplication, higher order terms that preserve the approximation everywhere are discarded. It’s this first order approximation that gives it utility for computing the derivative. Let’s imagine we have two first-order polynomials, and we want to calculate the output for all values to the resulting function after applying addition and multiplication. We could write this out as follows:
 
@@ -92,10 +85,10 @@ class Dual:
     def __init__(self, value=0., derivative=0.):
         self.value = value
         self.derivative = derivative
-        
+
     def __add__(self, other):
         return Dual(self.value + other.value, self.derivative + other.derivative)
-    
+
     def __mul__(self, other):
         return Dual(self.value * other.value, self.value*other.derivative + self.derivative * other.value)
 
@@ -104,13 +97,13 @@ class Dual:
             return Dual(self.value**other.value, self.derivative * other.value * self.value**(other.value-1) + other.derivative * self.value**other.value * math.log(self.value))
         else:
             return Dual(self.value**other.value, self.derivative * other.value * self.value**(other.value-1))
-            
+
     def __truediv__(self, other):
         return self * other**(-1.)
- 
+
 ```
 
-I’ve omitted the rather repetitive definition of inverse operators (like `__sub__`), since we can get those easily by composing the above operations. As an example, `__truediv__` which overloads `/` is shown as composing multiplication and power. 
+I’ve omitted the rather repetitive definition of inverse operators (like `__sub__`), since we can get those easily by composing the above operations. As an example, `__truediv__` which overloads `/` is shown as composing multiplication and power.
 For each operator, we can also automatically “cast” floating point constants into duals. Here is an example of the definition for `__add__`:
 
 ```python
@@ -192,7 +185,7 @@ def create_diff_fn(fn):
                 input_arg.derivative = 0.
 
             return jacobian
-        
+
         return diff_fn
 ```
 
@@ -216,7 +209,7 @@ y = Variable(0.05)
 z = x * y
 m = 1.3
 q = m+y
-   
+
 L = (q - (z**(m/2.) + z**2. - 1./z))**2
 
 # the forward calculation
@@ -251,7 +244,7 @@ Our `Variable` class represents an operation (or function), it’s inputs as var
     def calc_input_values(self):
         # calculate the real-valued input to operation
         return [v.value for v in self.input_variables]
-    
+
     def forward(self):  
         # calculate the real-valued output of operation              
         return self.forward_op(*self.calc_input_values())
@@ -259,14 +252,14 @@ Our `Variable` class represents an operation (or function), it’s inputs as var
     @property
     def value(self):
         return self.forward()
-    
+
     @value.setter
     def value(self, value):
         if callable(value):
             self.forward_op = value
         else:
             self.forward_op = lambda : value
-        
+
         self.derivative_op = create_diff_fn(self.forward_op)
 ```
 
@@ -284,7 +277,7 @@ This completes our bookkeeping for running the operation forward. Below, we incl
 ```
 
 And this is an example of defining an operation. We could pass in any function handle as an `operation`, but when overloading basic math functions, we create a lambda.
-    
+
 ```python
     def __add__(self, other):
         if isinstance(other, self.__class__):
@@ -352,7 +345,7 @@ def forward_fn(x):
             x = 3.*x
         else:
             x = x**(1./n) + 1./n
-        
+
     return x
 
 x = Variable(2.)
@@ -387,7 +380,7 @@ for n in range(20):
     x.value = x.value - 1e-4 * x.gradient
     # clear the gradients
     x.clear_gradient()
-    
+
 print('---- Converged Value ----')    
 print('fn(x): {}'.format(fn(x)))
 print('Target: {}'.format(target))
@@ -395,7 +388,7 @@ print('converged x: {}'.format(x))
 
 
 '''
-# Wolfram alpha minimum: 
+# Wolfram alpha minimum:
 # min{(x^2 + 0.2 (x - 2)^5 + 2 x^3 - 42)^2} = 0 at x≈2.60158
 # Output:
 '''
@@ -416,6 +409,8 @@ This post hopefully provides you with a good intuition for using AD in real prob
 
 Anyway, I hope AD is now not so mysterious to you, but is perhaps even more magical. :)
 
+### Further Reading
+
+There are some other articles that I've found super useful, about halfway through writing this post, I also found [rufflewind's post](https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation), who covers some additional optics like using "tape" based methods and some memory saving optimizations.
+
 The code for the embedded examples and the full class definitions (with more of the operators overloaded and some pretty-print functions) can be found on [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
-
-
