@@ -3,35 +3,36 @@ Tristan Swedish
 Camera Culture
 MIT Media Lab
 
-There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, ranging from computational design, imaging and graphics, to financial analysis and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic auto-diff library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
-
-If you've heard of auto-diff, it's probably by using frameworks like PyTorch or Theano, which use it for calculating gradients to train deep neural networks. Until deep-learning frameworks popularized it, the field of AD has been surprisingly obscure. Even now, there is a perception that it requires significant domain knowledge and is basically magic. Another term for auto-diff is the "Adjoint State Method" which certainly doesn't do it any favors.
-
-The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you, build your own implementation, or contribute to the amazing open source projects out there today.
+There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, ranging from computational design, imaging and graphics, robotic control, financial analysis, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or auto-diff, or AD). In this post, we will develop a basic auto-diff library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
 
 ## Why would I want to differentiate computer programs?
 
-Auto-diff is powerful because it makes it easier to solve a type of engineering problem that have traditionally been very difficult to solve in a general way. These problems typically have the form: "What is a likely input to a simulation, given only the output?"
+Computers are really good at simulation. If you've played any video games recently, or used any engineering design tools, I'm sure you'll agree. Simulations are undoubtably very useful, but we naturally encounter the *inverse problem*: "What is a likely input to a simulation, given only the output?"
 
-It can be extremely useful to solve these *inverse problems*, but given the code for a simulation, or *forward model*, how do we use it to solve the inverse? Guess and check? That could take forever!
+For example, given a simulation of airflow around a formula 1 race car, how should the wing be changed to improve down-force? Given a simulation of a rocket, what sequence of gimbal movements will make it land upright? We can model the blur created by a shaky camera, what does the "deblurred" scene look like?
 
-If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach to solve inverse problems. In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.
+It can be extremely useful to solve these *inverse problems*, but how do we go about this? Guess and check inputs to the simulation? That could take forever!
 
+If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach to solve inverse problems. (In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.)
+
+If you've heard of auto-diff, it's probably by using frameworks like PyTorch or Theano, which use it for calculating gradients to train deep neural networks. Until deep-learning frameworks popularized it, the field of AD has been surprisingly obscure. Even now, there is a perception that it requires significant domain knowledge and is basically magic. Another term for auto-diff is the "Adjoint State Method" (for reverse mode) which certainly doesn't do it any favors.
+
+The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you.
 
 ## It’s all about Abstraction
 
-At the core, auto-diff uses a special type of number that makes it possible to differentiate complex functions. Understanding auto-diff is all about understanding abstraction. The philosophy and motivation for the kind of abstraction I'm talking about is explored in Richard Feynman’s lectures on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians).
+At the core, auto-diff uses a special type of number that makes it possible to differentiate complex functions. Understanding auto-diff is all about understanding abstraction. The philosophy and motivation for the kind of abstraction I'm talking about is explored in this lecture by Richard Feynman, as part of his famous series on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians).
 
-For example, we could write a python function:
+To make this a bit more concrete, let's write a python function that does some computation:
 
 ```python
 def super_complicated_function(x):
 	return x * sin(x+6.)**2. / 2. - 2. / 2.**x
 ```
 
-You'll notice that we compose our function using a few primitive functions: `sin`, `**` (or `pow`), `+`, `-`, `*`, `/`. We can compose expressions, and the python interpreter handles everything to make this function do what we expect algebraically (like obeying operator precedence with `()`). Importantly, operators like `+` are just functions that take two arguments but use a fancy syntax.
+You'll notice that we compose our function using a few primitives: `sin`, `**` (or `pow`), `+`, `-`, `*`, `/`. We can compose expressions, and the python interpreter handles everything to make this function do what we expect algebraically. Importantly, operators like `+` are just functions that take two arguments but use a fancy syntax.
 
-We naturally expect the above function to operate on floating point input. If we pass a new type (`class`) into our function that overloads the necessary functions (`+`, `*`, etc) in a sensible way, the rules of algebra still apply and everything works out. In auto-diff, we create a class that returns a modified version of itself, from which we can compute the gradient using a simple procedure.
+We naturally expect the above function to operate on floating point input. We could pass a new type (`class`) into our function and carefully overload the necessary functions (`+`, `*`, etc) so that the rules of algebra still apply.
 
 To better understand this idea, let us put aside auto-diff and use an example of a type (`class`) that has this property. Instead of using a simple procedure to recover the gradient, we will instead extract the imaginary component of a complex number.
 
