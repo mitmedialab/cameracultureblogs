@@ -9,7 +9,7 @@ There is an extremely powerful tool that has gained popularity in recent years t
 
 Computers are really good at simulation. If you've played any video games recently, or used any engineering design tools, I'm sure you'll agree. Simulations are undoubtably very useful, but we naturally encounter the *inverse problem*: "What is a likely input to a simulation, given only the output?"
 
-For example, given a simulation of airflow around a formula 1 race car, how should the wing be changed to improve down-force? Given a simulation of a rocket, what sequence of gimbal movements will make it land upright? We can model the blur created by a shaky camera, what does the "deblurred" scene look like?
+For example, given a simulation of airflow around a formula 1 race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)? Given a simulation of a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)? We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like? Given a massive dataset and an architecture for a neural network, what connection weights will [give good results](https://www.youtube.com/watch?v=kSLJriaOumA)?
 
 It can be extremely useful to solve these *inverse problems*, but how do we go about this? Guess and check inputs to the simulation? That could take forever!
 
