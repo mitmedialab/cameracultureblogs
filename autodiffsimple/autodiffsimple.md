@@ -43,15 +43,15 @@ To better understand this idea, let us put aside auto-diff and use an example of
 
 We can write complex numbers like this:
 
+<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
+
+Where <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3D%20-1">.
+
+As long as we overload the correct operators, such as `*` and `+`, we can define a complex number class that has an algebraic structure that is practically the same as for floating point numbers. With complex numbers, we can compute the result of these operations by using normal algebra, noting that <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3D%20-1">. For example here is addition and multiplication:
+
 <img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%2B%20%28c%20%2B%20i%20d%29%20%3D%20%28a%20%2B%20c%29%20%2B%20i%20%28b%20%2B%20d%29">
 
-Where <img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%2A%20%28c%20%2B%20i%20d%29%20%3D%20%28ac%20-%20bd%29%20%2B%20i%20%28ad%20%2B%20bc%29"> .
-
-As long as we overload the correct operators, such as `*` and `+`, we can define a complex number class that has an algebraic structure that is practically the same as for floating point numbers. For example here is addition and multiplication:
-
-<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
-
-<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
+<img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%5Ccross%20%28c%20%2B%20i%20d%29%20%3D%20%28ac%20-%20bd%29%20%2B%20i%20%28ad%20%2B%20bc%29">
 
 We can then run a complex number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 
