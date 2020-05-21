@@ -125,7 +125,7 @@ def __add__(self, other):
             return self + Dual(other)
 ```
 
-We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()`:
+We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules ( :nerd_face: : in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()`:
 
 ```python
 import math
