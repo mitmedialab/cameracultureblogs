@@ -9,8 +9,6 @@ There is an extremely powerful tool that has gained popularity in recent years t
 
 Computers are really good at simulation. If you've played any video games recently, or used any engineering design tools, I'm sure you'll agree. Simulations are undoubtably very useful, but we naturally encounter the *inverse problem*: "What is a likely input to a simulation, given only the output?"
 
-Auto-diff does a lot of heavy lifting for exciting problems like these:
-
 * Given a simulation of airflow around a *Formula 1* race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)? :racing_car:
 * You have a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)? :rocket:
 * We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like? :camera:
