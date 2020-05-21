@@ -11,20 +11,20 @@ Computers are really good at simulation. If you've played any video games recent
 
 Auto-diff does a lot of heavy lifting for exciting problems like these:
 
-* Given a simulation of airflow around a formula 1 race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)?
-* You have a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)?
-* We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like?
-* With a massive dataset and an architecture for a neural network, what connection weights will [give good results](https://www.youtube.com/watch?v=kSLJriaOumA)?
+* Given a simulation of airflow around a *Formula 1* race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)? :racing_car:
+* You have a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)? :rocket:
+* We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like? :camera:
+* With a massive dataset and an architecture for a neural network, what connection weights will [give good results](https://www.youtube.com/watch?v=kSLJriaOumA)? :bust_in_silhouette:
 
 It can be extremely useful to solve these inverse problems, but how do we go about this? Guess and check inputs to the simulation? That could take forever!
 
-If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach that can be used to solve many inverse problems. (In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.)
+If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach that can be used to solve many inverse problems. (:nerd_face: : In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.)
 
 If you've heard of auto-diff, it's probably by using frameworks like PyTorch or Theano, which use it for calculating gradients to train deep neural networks. Until deep-learning frameworks popularized it, the field of AD has been surprisingly obscure. Even now, there is a perception that it requires significant domain knowledge and is basically magic. The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you.
 
 ## It’s all about Abstraction
 
-At the core, auto-diff uses a special type of number that makes it possible to differentiate complex functions. Thus, understanding auto-diff is all about understanding abstraction. The philosophy and motivation for the kind of abstraction I'm talking about is explored in this lecture by Richard Feynman, as part of his famous series on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians).
+At the core, auto-diff uses a special type of number that makes it possible to differentiate complex functions. Thus, understanding auto-diff is all about understanding abstraction. The philosophy and motivation for the kind of abstraction I'm talking about is explored in this lecture by Richard Feynman, as part of his famous series on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (:nerd_face: : and the mathematicians).
 
 To make this a bit more concrete, let's write a python function that does some computation:
 
@@ -71,13 +71,13 @@ Here’s the intuition: when computing with dual numbers, you’re computing a f
 
 Now, we have a function of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, where the output of our function with perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon"> perturbations to our function, we can throw away these high order terms.
 
-There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">  to get 1? If we do the reasonable thing, we find <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">, which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
+There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">  to get 1? If we do the reasonable thing, we find <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">, which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :disappointed:
 
-(In abstract algebra terms, the dual numbers with `+` and `*` are a ring, while the reals have a multiplicative inverse, making them a field along with `+` and `*`. This matches our intuition, since dual numbers kinda seem like a polynomial ring, but we lop off any higher-order terms after performing a multiplication. We can keep these higher order terms if we want, and this becomes a Taylor polynomial algebra, but our memory requirements grow significantly for repeated multiplications.)
+( :nerd_face: : In abstract algebra terms, the dual numbers with `+` and `*` are a ring, while the reals have a multiplicative inverse, making them a field along with `+` and `*`. This matches our intuition, since dual numbers kinda seem like a polynomial ring, but we lop off any higher-order terms after performing a multiplication. We can keep these higher order terms if we want, and this becomes a Taylor polynomial algebra, but our memory requirements grow significantly for repeated multiplications.)
 
 ### What about division?
 
-In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of <img src="https://render.githubusercontent.com/render/math?math=0%20%2B%20%5Cepsilon%20b"> for a well formed function that works on the reals.
+In practice, maybe this is silly, since with real numbers we don’t divide by zero anyway, so we’ll never want to find the multiplicative inverse of <img src="https://render.githubusercontent.com/render/math?math=0%20%2B%20%5Cepsilon%20b"> for a well formed function that works using real numbers are arguments.
 
 We can use the derivation above to define `/` as multiplying by <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">. Now, noting that `1 / x` is `x**-1`, can we come up with a general definition for `pow(x, y)` that works for all `y` and not just `y == -1`? We can do just a bit more math to come up with these definitions.
 
@@ -87,7 +87,7 @@ A general definition for `pow(x,y)` can be found using the binomial theorem, not
 
 <img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20%5Cepsilon%20b%29%5En%20%3D%20a%5En%20%2B%20%5Cepsilon%20b%20a%5E%7Bn-1%7D">
 
-Look, we get the well known power rule using algebra! I love this because we don’t even need to use the traditional definition of the derivative that uses limits.
+Look, we get the well known power rule using algebra! I love this because we don’t even need to use the traditional definition of the derivative that uses limits. (:nerd_face: : `pow()` is particularly interesting, and there's some more detail I didn't cover here, the code section below shows the full rule.)
 
 Translating this into code, we can overload python’s arithmetic operators as follows:
 
@@ -125,7 +125,7 @@ def __add__(self, other):
             return self + Dual(other)
 ```
 
-We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()` in python:
+We can add more operators, such as `exp()` and `sin()` using the familiar derivative rules (in principle, we can derive the rules ourselves using algebra, e.g. equating Euler’s formula for `sin()` and its power series). However,  as long as we define the output of an operation such that we output the value of the function, as well as its derivative multiplied by the derivative value of the input `Dual`, we can compose these operators and everything works as expected. For example, here is `sin()`:
 
 ```python
 import math
@@ -140,7 +140,7 @@ def sin(dual):
 
 Now, we can perform Forward Mode AD practically right away, using the `Dual` numbers class we’ve already defined.
 
-Now, when we run our function, in order to calculate `x’` for the input to our function, we pass in a `Dual`, with a constructor that sets the `.derivative` data member to 1, in order to correctly calculate `f` and `df/dx` when we call the function. Using our dual numbers class, we can input some values into `super_complicated_function` and we get some answers!
+When we run our function, in order to calculate `x’` for the input to our function, we pass in a `Dual`, with a constructor that sets the `.derivative` data member to 1, in order to correctly calculate `f` and `df/dx` when we call the function. Using our dual numbers class, we can input some values into `super_complicated_function` and we get some answers!
 
 ```python
 def super_complicated_function(x):
