@@ -51,7 +51,7 @@ As long as we overload the correct operators, such as `*` and `+`, we can define
 
 <img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%2B%20%28c%20%2B%20i%20d%29%20%3D%20%28a%20%2B%20c%29%20%2B%20i%20%28b%20%2B%20d%29">
 
-<img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%5Ccross%20%28c%20%2B%20i%20d%29%20%3D%20%28ac%20-%20bd%29%20%2B%20i%20%28ad%20%2B%20bc%29">
+<img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%20%28c%20%2B%20i%20d%29%20%3D%20%28ac%20-%20bd%29%20%2B%20i%20%28ad%20%2B%20bc%29">
 
 We can then run a complex number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 
