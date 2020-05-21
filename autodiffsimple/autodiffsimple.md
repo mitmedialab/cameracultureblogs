@@ -35,7 +35,7 @@ def super_complicated_function(x):
 
 You'll notice that we compose our function using a few primitives: `sin`, `**` (or `pow`), `+`, `-`, `*`, `/`. We can compose expressions, and the python interpreter handles everything to make this function do what we expect algebraically. Importantly, operators like `+` are just functions that take two arguments but use a fancy syntax.
 
-We naturally expect the above function to operate on floating point input. We could pass a new type (`class`) into our function and carefully overload the necessary functions (`+`, `*`, etc) so that the rules of algebra still apply.
+We naturally expect the above function to operate on floating point input, but we could pass a new type (`class`) into our function and carefully overload the necessary functions (`+`, `*`, etc) so that the rules of algebra still apply.
 
 To better understand this idea, let us put aside auto-diff and use an example of a type (`class`) that has this property. Instead of using a simple procedure to recover the gradient, we will instead extract the imaginary component of a complex number.
 
