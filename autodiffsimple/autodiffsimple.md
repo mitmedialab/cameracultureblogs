@@ -9,11 +9,16 @@ There is an extremely powerful tool that has gained popularity in recent years t
 
 Computers are really good at simulation. If you've played any video games recently, or used any engineering design tools, I'm sure you'll agree. Simulations are undoubtably very useful, but we naturally encounter the *inverse problem*: "What is a likely input to a simulation, given only the output?"
 
-For example, given a simulation of airflow around a formula 1 race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)? Given a simulation of a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)? We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like? Given a massive dataset and an architecture for a neural network, what connection weights will [give good results](https://www.youtube.com/watch?v=kSLJriaOumA)?
+Auto-diff does a lot of heavy lifting for exciting problems like these:
 
-It can be extremely useful to solve these *inverse problems*, but how do we go about this? Guess and check inputs to the simulation? That could take forever!
+* Given a simulation of airflow around a formula 1 race car, how should the wing be changed to [improve down-force](https://www.youtube.com/watch?v=hU0Whx7EZic)?
+* You have a rocket, what sequence of gimbal movements will make it [land upright](https://www.youtube.com/watch?v=ANv5UfZsvZQ)?
+* We can model the blur created by a shaky camera, what does the ["deblurred" scene](https://www.youtube.com/watch?v=IlcLa5JeTrE) look like?
+* With a massive dataset and an architecture for a neural network, what connection weights will [give good results](https://www.youtube.com/watch?v=kSLJriaOumA)?
 
-If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach to solve inverse problems. (In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.)
+It can be extremely useful to solve these inverse problems, but how do we go about this? Guess and check inputs to the simulation? That could take forever!
+
+If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach that can be used to solve many inverse problems. (In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.)
 
 If you've heard of auto-diff, it's probably by using frameworks like PyTorch or Theano, which use it for calculating gradients to train deep neural networks. Until deep-learning frameworks popularized it, the field of AD has been surprisingly obscure. Even now, there is a perception that it requires significant domain knowledge and is basically magic. The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you.
 
@@ -36,11 +41,19 @@ To better understand this idea, let us put aside auto-diff and use an example of
 
 ## Example: Complex Numbers
 
-As long as we overload the correct operators, such as `*` and `+`, we can define a complex number class that has an algebraic structure that is practically the same as for floating point numbers. We can write complex numbers like this:
+We can write complex numbers like this:
+
+<img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%2B%20%28c%20%2B%20i%20d%29%20%3D%20%28a%20%2B%20c%29%20%2B%20i%20%28b%20%2B%20d%29">
+
+Where <img src="https://render.githubusercontent.com/render/math?math=%28a%20%2B%20i%20b%29%20%2A%20%28c%20%2B%20i%20d%29%20%3D%20%28ac%20-%20bd%29%20%2B%20i%20%28ad%20%2B%20bc%29"> .
+
+As long as we overload the correct operators, such as `*` and `+`, we can define a complex number class that has an algebraic structure that is practically the same as for floating point numbers. For example here is addition and multiplication:
 
 <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
 
-Where <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3D%20-1"> . If we created a complex number class in python that overloads the correct operators, we can then run that number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
+<img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20i%20b">
+
+We can then run a complex number through our function above without any modification, and it would do what we expect, except we get both the real and imaginary valued output.
 
 ## Dual Numbers
 
