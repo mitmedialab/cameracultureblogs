@@ -3,27 +3,26 @@ Tristan Swedish
 Camera Culture
 MIT Media Lab
 
-There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, particularly to the problem of perception, computational imaging, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic AD library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
+There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, ranging from computational design, imaging and graphics, to financial analysis and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or AD), the cryptic tool that makes it possible to train neural networks and differentiate pretty general programs. In this post, we will develop a basic auto-diff library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
 
-The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you, and be inspired to use more complex implementations with confidence.
+If you've heard of auto-diff, it's probably by using frameworks like PyTorch or Theano, which use it for calculating gradients to train deep neural networks. Until deep-learning frameworks popularized it, the field of AD has been surprisingly obscure. Even now, there is a perception that it requires significant domain knowledge and is basically magic. Another term for auto-diff is the "Adjoint State Method" which certainly doesn't do it any favors.
 
-## (TODO re-write this section) Why would I want to differentiate computer programs?
+The goal of this post is to show how auto-diff really works, without getting too bogged down in the details. Even with these simple examples, I hope you can appreciate what auto-diff could do for you, build your own implementation, or contribute to the amazing open source projects out there today.
 
-If you've heard of auto-diff it's probably because you've learned how to train deep neural networks. Until deep-learning frameworks like PyTorch and Theano popularized it, the field of AD has been plagued by an aura of esoteric incantations inherent in some domains of scientific computing. In that world, it's known as the "Adjoint State Method" or "Adjoint Code," with popular implementations in FORTRAN. These methods are super powerful, but they don't need to be inaccessible.
+## Why would I want to differentiate computer programs?
 
-Scientific computing.
+Auto-diff is powerful because it makes it easier to solve a type of engineering problem that have traditionally been very difficult to solve in a general way. These problems typically have the form: "What is a likely input to a simulation, given only the output?"
 
-*If you can differentiate a simulation, you can do more than just predict the output, you can figure out what the inputs should be to match real measurements.*
+It can be extremely useful to solve these *inverse problems*, but given the code for a simulation, or *forward model*, how do we use it to solve the inverse? Guess and check? That could take forever!
 
-Being able to calculate the derivative of functions defined in computer programs has broad applications. In essence, it allows you to understand how perturbations to the program input change the output.
+If you can calculate the derivative of the output with respect to the input, we can use an algorithm known as *gradient descent*, which provides a general purpose approach to solve inverse problems. In practice, vanilla gradient descent is part of a rich family of gradient based optimization methods, and auto-diff is helpful for them as well.
 
-This post focuses the simplicity of AD under the hood, showing how it performs a beautiful, almost magical transformation that allows us to find the derivatives of a subset of interesting computer programs.
 
 ## It’s all about Abstraction
 
-Auto-diff is all about abstraction. The power of useful abstractions are well explained in Richard Feynman’s famous lectures on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians). If you go down this road, you may hear about Abstract Algebra. You can read more here: [a blog post](https://jrsinclair.com/articles/2019/algebraic-structures-what-i-wish-someone-had-explained-about-functional-programming/), [a book](https://www.fm2gp.com/).
+At the core, auto-diff uses a special type of number that makes it possible to differentiate complex functions. Understanding auto-diff is all about understanding abstraction. The philosophy and motivation for the kind of abstraction I'm talking about is explored in Richard Feynman’s lectures on physics: [Feynman Lecture on Algebra](https://www.feynmanlectures.caltech.edu/I_22.html). It’s such a beautiful idea, mathematicians keep discovering new things that are increasingly abstract, but surprisingly, we keep finding use for them (and the mathematicians).
 
-For our example, we could write a python function:
+For example, we could write a python function:
 
 ```python
 def super_complicated_function(x):
@@ -46,7 +45,7 @@ Where <img src="https://render.githubusercontent.com/render/math?math=i%5E2%20%3
 
 ## Dual Numbers
 
-There is a kind of number very similar to complex numbers that give us the properties we need to perform AD. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative.
+There is a kind of number very similar to complex numbers that give us the properties we need to perform auto-diff. Dual numbers have the nice property that when you calculate with them, they bring along their own derivative.
 
 Dual-numbers can be defined in similar way to complex numbers:
 
@@ -58,7 +57,7 @@ Here’s the intuition: when computing with dual numbers, you’re computing a f
 
 ![](imgs/function_math.png)
 
-In this interpretation, we have a function of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon"> perturbations to our function, we can throw away these high order terms.
+Now, we have a function of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, where the output of our function with no perturbation is simply “a”, and perturbed values change linearly. If you’ve noticed that this looks like a Taylor series expansion, well you’d be right! If we want to perfectly model the resulting function for all values of <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon">, we need to keep higher order terms. Multiplication makes these terms grow. What’s nice though, is if we only care about infinitesimal <img src="https://render.githubusercontent.com/render/math?math=%5Cepsilon"> perturbations to our function, we can throw away these high order terms.
 
 There’s a problem though, computing with dual numbers isn’t actually analogous to real numbers since we don’t have a `/`. This can be shown by asking, what’s the element we can multiply with <img src="https://render.githubusercontent.com/render/math?math=a%20%2B%20%5Cepsilon%20b">  to get 1? If we do the reasonable thing, we find <img src="https://render.githubusercontent.com/render/math?math=%5Cfrac%7B1%7D%7Ba%7D%20%2B%20-%20%5Cepsilon%20%5Cfrac%7Bb%7D%7Ba%5E2%7D">, which is not well defined for all `(a,b)`, since we have a division by zero when `(0,b)`. Without a single “zero” element, we don’t have a well defined multiplicative inverse. :(
 
