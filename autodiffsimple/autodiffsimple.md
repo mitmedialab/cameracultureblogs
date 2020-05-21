@@ -344,7 +344,7 @@ So far, if we define a function that processes `Dual` types, we are using Forwar
 
 We don't have to save intermediate results from the whole computation graph. Using a method called "checkpointing," we can save only a few intermediate results and recompute values by calling forward on subsections of the computation graph. This is a memory saving technique, but requires additional computation. It can be thought of as a sort of combination of forward and backward modes, so it's called "Hybrid Mode AD." (:nerd_face: : It’s known that finding the optimal trade-off between checkpointing and running forward and backward to balance time and memory complexity is NP-hard. This means that we probably won’t find the most efficient way to compute the derivatives for arbitrary programs. Luckily, there are some good heuristics that actually do a pretty good job. )
 
-Anyway, our library is definitely not very efficient, and more production grade AD libraries often use smart caching of intermediate results and perform various optimizations. Regardless, our simple little library can do some really neat things. It gracefully handles control flow, and can differentiate pretty complex programs already.
+Anyway, our library is definitely not very efficient, and more production grade AD libraries often use smart caching of intermediate results and perform various optimizations (:nerd_face: : keyword "gradient tape"). Regardless, our simple little library can do some really neat things. It gracefully handles control flow, and can differentiate pretty complex programs already.
 
 ## Conclusion: Simple Python Library
 
