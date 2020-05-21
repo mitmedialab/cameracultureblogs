@@ -3,7 +3,7 @@ Tristan Swedish
 Camera Culture
 MIT Media Lab
 
-There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, ranging from computational design, imaging and graphics, robotic control, financial analysis, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or auto-diff, or AD). In this post, we will develop a basic auto-diff library from scratch using only standard python functions [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
+There is an extremely powerful tool that has gained popularity in recent years that has an unreasonable number of applications, ranging from computational design, imaging and graphics, robotic control, financial analysis, and machine learning. Nope, this post is not about Deep Learning, this post is about [Automatic Differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) (or auto-diff, or AD). In this post, we will develop a basic auto-diff library from scratch using only standard python functions. (TL;DR here is the [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple)).
 
 ## Why would I want to differentiate computer programs?
 
@@ -425,6 +425,6 @@ Anyway, I hope AD is now not so mysterious to you, but is perhaps even more magi
 
 ### Further Reading
 
-There are some other articles that I've found super useful, about halfway through writing this post, I found [rufflewind's post](https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation), who covers some additional optics like using "tape" based methods and some memory saving optimizations. A [recent review](http://jmlr.org/papers/volume18/17-468/17-468.pdf) on AD in machine learning is also a more academic resource with more references for further reading.
+There are some other articles that I've found super useful, about halfway through writing this post, I found [rufflewind's post](https://rufflewind.com/2016-12-30/reverse-mode-automatic-differentiation), who covers some additional topics like using "tape" based methods and some memory saving optimizations. A [recent review](http://jmlr.org/papers/volume18/17-468/17-468.pdf) on AD in machine learning is also a more academic resource with more references for further reading.
 
 The code for the embedded examples and the full class definitions (with more of the operators overloaded and some pretty-print functions) can be found on [github](https://github.com/mitmedialab/cameracultureblogs/tree/master/autodiffsimple).
